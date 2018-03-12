@@ -1,13 +1,23 @@
 require 'active_record/base'
 require 'ansi'
+require 'term/ansicolor'
 require 'pp'
 
 module Elasticsearch
   module Rails
     module HA
       class ParallelIndexer
+        include Term::ANSIColor
 
         attr_reader :klass, :idx_name, :nprocs, :batch_size, :max, :force, :verbose, :scope
+
+        def blue_log(msg)
+          blue{ msg }
+        end
+
+        def red_log(msg)
+          red{ msg }
+        end
 
         # leverage multiple cores to run indexing in parallel
         def initialize(opts)
@@ -41,11 +51,11 @@ module Elasticsearch
             offsets.push( chunk.first )
           end
           if @verbose
-            puts ::ANSI.blue{ "Parallel Indexer: index=#{@idx_name} total=#{@total_expected} nprocs=#{@nprocs} pool_size=#{@pool_size} offsets=#{offsets} " }
+            puts blue_log("Parallel Indexer: index=#{@idx_name} total=#{@total_expected} nprocs=#{@nprocs} pool_size=#{@pool_size} offsets=#{offsets} ")
           end
 
           if @force
-            @verbose and puts ::ANSI.blue{ "Force creating new index" }
+            @verbose and puts blue_log("Force creating new index")
             klass.__elasticsearch__.create_index! force: true, index: idx_name
             klass.__elasticsearch__.refresh_index! index: idx_name
           end
@@ -85,25 +95,25 @@ module Elasticsearch
             pstat = pair[1]
             exit_ok = true
             if pstat.exited?
-              @verbose and puts ::ANSI.blue{ "PID #{pid} exited with #{pstat.exitstatus}" }
+              @verbose and puts blue_log("PID #{pid} exited with #{pstat.exitstatus}")
             end
             if pstat.signaled?
-              puts ::ANSI.red{ " >> #{pid} exited with uncaught signal #{pstat.termsig}" }
+              puts red_log(" >> #{pid} exited with uncaught signal #{pstat.termsig}")
               exit_ok = false
             end
 
             if !pstat.success?
-              puts ::ANSI.red{ " >> #{pid} was not successful" }
+              puts red_log(" >> #{pid} was not successful")
               exit_ok = false
             end
 
             if pair[1].exitstatus != 0
-              puts ::ANSI.red{ " >> #{pid} exited with non-zero status" }
+              puts red_log(" >> #{pid} exited with non-zero status")
               exit_ok = false
             end
 
             if !exit_ok
-              raise ::ANSI.red{ "PID #{pair[0]} exited abnormally, so the whole reindex fails" }
+              raise red_log("PID #{pair[0]} exited abnormally, so the whole reindex fails")
             end
           end
         end
@@ -117,7 +127,7 @@ module Elasticsearch
 
           completed = 0
           errors    = []
-          @verbose and puts ::ANSI.blue{ "Start worker #{$$} at offset #{start_at}" }
+          @verbose and puts blue_log("Start worker #{$$} at offset #{start_at}")
           pbar = ::ANSI::Progressbar.new("#{klass} [#{$$}]", @pool_size, STDOUT) rescue nil
           checkpoint = false
           if pbar
@@ -142,7 +152,7 @@ module Elasticsearch
                 pbar.inc resp['items'].size
               end
               if checkpoint && @verbose
-                puts ::ANSI.blue{ "[#{$$}] #{Time.now.utc.iso8601} : #{completed} records completed" }
+                puts blue_log("[#{$$}] #{Time.now.utc.iso8601} : #{completed} records completed")
               end
               STDERR.flush
               STDOUT.flush
@@ -152,7 +162,7 @@ module Elasticsearch
               end
               if completed >= @pool_size || (@max && @max.to_i == completed)
                 pbar.finish if pbar
-                @verbose and puts ::ANSI.blue{ "Worker #{$$} finished #{completed} records" }
+                @verbose and puts blue_log("Worker #{$$} finished #{completed} records")
                 exit!(true) # exit child worker
               end
             end # end do |resp| block

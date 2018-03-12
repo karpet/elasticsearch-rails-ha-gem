@@ -1,6 +1,14 @@
 require 'spec_helper'
 
 describe Elasticsearch::Rails::HA::ParallelIndexer do
+  before(:each) do
+    ESHelper.delete_all_indices
+  end
+
+  after(:each) do
+    ESHelper.delete_all_indices
+  end
+
   it "creates index using parallel indexers" do
     indexer = Elasticsearch::Rails::HA::ParallelIndexer.new(
       klass: Article,

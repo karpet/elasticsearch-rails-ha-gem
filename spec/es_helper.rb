@@ -29,4 +29,9 @@ class ESHelper
   def self.client
     Elasticsearch::Model.client
   end
+
+  def self.delete_all_indices
+    indices = self.client.indices.get_aliases
+    self.client.indices.delete(index: indices.keys) if indices.keys.any?
+  end
 end

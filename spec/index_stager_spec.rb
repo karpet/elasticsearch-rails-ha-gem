@@ -2,9 +2,12 @@ require 'spec_helper'
 require 'pp'
 
 describe Elasticsearch::Rails::HA::IndexStager do
+  before(:each) do
+    ESHelper.delete_all_indices
+  end
 
   after(:each) do
-    ESHelper.client.indices.delete index: "articles_staged" rescue false
+    ESHelper.delete_all_indices
   end
 
   it "generates index names" do
@@ -15,7 +18,7 @@ describe Elasticsearch::Rails::HA::IndexStager do
 
   it "stages an index" do
     stager = stage_index
-    aliases = ESHelper.client.indices.get_aliases(index: stager.stage_index_name)
+    aliases = ESHelper.client.indices.get_alias(index: stager.stage_index_name, name: '*')
     expect(aliases.keys.size).to eq 1
     expect(aliases.keys[0]).to eq stager.tmp_index_name
   end
@@ -28,7 +31,7 @@ describe Elasticsearch::Rails::HA::IndexStager do
     response = Article.search('title:test')
     expect(response.results.size).to eq 2
 
-    aliases = ESHelper.client.indices.get_aliases(index: Article.index_name)
+    aliases = ESHelper.client.indices.get_alias(index: Article.index_name, name: '*')
     expect(aliases.keys[0]).to eq stager.tmp_index_name
   end
 
@@ -47,7 +50,7 @@ describe Elasticsearch::Rails::HA::IndexStager do
     stager.promote
     Article.__elasticsearch__.refresh_index!
 
-    aliases = ESHelper.client.indices.get_aliases(index: Article.index_name)
+    aliases = ESHelper.client.indices.get_alias(index: Article.index_name, name: '*')
     expect(aliases.keys[0]).to eq stager.tmp_index_name
   end
 

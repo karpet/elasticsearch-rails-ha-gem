@@ -7,12 +7,12 @@ Gem::Specification.new do |s|
   s.name          = 'elasticsearch-rails-ha'
   s.version       = Elasticsearch::Rails::HA::VERSION
   s.authors       = ['Peter Karman']
-  s.email         = ['peter.karman@gsa.gov']
+  s.email         = ['karpet@peknet.com']
   s.summary       = 'High Availability extensions to the Elasticsearch::Rails gem'
   s.description   = (
     'High Availability extensions to the Elasticsearch::Rails gem'
   )
-  s.homepage      = 'https://github.com/18F/elasticsearch-rails-ha-gem'
+  s.homepage      = 'https://github.com/karpet/elasticsearch-rails-ha-gem'
   s.license       = 'CC0'
 
   s.files         = `git ls-files -z *.md bin lib`.split("\x0") + [
@@ -21,14 +21,14 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'elasticsearch-model'
   s.add_runtime_dependency 'elasticsearch-rails'
-  s.add_runtime_dependency 'elasticsearch-indexstager'
+  s.add_runtime_dependency 'elasticsearch-indexstager', '~> 1.1.3'
   s.add_runtime_dependency 'ansi'
+  s.add_runtime_dependency 'term-ansicolor'
 
   s.required_ruby_version = ">= 2.0.0"
-  s.add_development_dependency 'about_yml'
   s.add_development_dependency "bundler", "~> 1.3"
   s.add_development_dependency "rake"
-  s.add_development_dependency "rspec"
+  s.add_development_dependency "rspec", '~> 3.0'
 
   s.add_development_dependency "elasticsearch-extensions"
   s.add_development_dependency "sqlite3"
